@@ -1,0 +1,80 @@
+# download the vechile sales data -> https://github.com/shashank-mishra219/Hive-Class/blob/main/sales_order_data.csv
+
+# using filezilla copy the data to cloudera 
+
+# store the sales csv file into hdfs location
+hadoop fs -put /home/cloudera/Desktop/data_resources/sales_order_data.csv /tmp/hive_class
+
+# create managed table in hive
+use hive_practice_db;
+create table sales_data_csv
+(
+ordernumber int,
+quantityordered int,
+priceeach float,
+orderline int,
+sales float,
+status string,
+qtr_id int,
+month_id int,
+year_id int,
+productline string,
+msrp int,
+productcode string,
+phone string, 
+city string,
+state string,
+postalcode string,
+country string,
+territory string,
+contactlastname string,
+contactfirstname string,
+dealsize string
+)
+row format delimited
+fields terminated by ','
+TBLPROPERTIES("skip.header.line.count" = "1");
+
+# to know more details about the table
+describe formatted sales_data_csv;
+
+# insert the data into the table from HDFS location
+load data inpath '/tmp/hive_class' into table sales_data_csv;
+
+# create an internal hive table which will store data in ORC format "sales_order_orc"
+create table sales_data_orc
+(
+ordernumber int,
+quantityordered int,
+priceeach float,
+orderline int,
+sales float,
+status string,
+qtr_id int,
+month_id int,
+year_id int,
+productline string,
+msrp int,
+productcode string,
+phone string, 
+city string,
+state string,
+postalcode string,
+country string,
+territory string,
+contactlastname string,
+contactfirstname string,
+dealsize string
+)
+stored as orc;
+
+# load data from sales_data_csv into sales_data_orc
+insert overwrite table sales_data_orc select * from sales_data_csv;
+
+# performing below menioned queries on "sales_data_orc" table :
+
+# 1. Calculatye total sales per year
+select year_id, sum(sales) as total_sales from sales_data_orc group by year_id;
+
+# 2. Find a product for which maximum orders were placed
+select productline as product, sum(quantityordered) as total_orders from sales_data_orc group by productline;
